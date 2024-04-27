@@ -1,7 +1,6 @@
 import numpy as np
 from PIL import Image
 
-
 n = np.array([[1,2,3,4,5], [1,2,3,4,5], [0,0,0,0,0],[1,2,3,4,5], [1,2,3,4,5]])
 # print(n, "\n", n.shape, "\n")
 
