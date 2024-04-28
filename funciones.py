@@ -1,6 +1,11 @@
 import numpy as np
 from PIL import Image
 
+letras = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'espacio', '.', ',', '?', '!', '¿', '¡', '(', ')', ':', ';', '-', '“', '‘', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
+
+secuencia = [(numero, letra) for numero, letra in enumerate(letras,1)]
+print(secuencia)
+
 def crearCanales(path : str):
     '''Devuelve los canales RGB de la imagen importada en 3 matrices diferentes'''
     # Se importa la imagen
@@ -28,12 +33,17 @@ def padding(path : str):
 
 def varCanal(canal : np.ndarray):
     entornos = []
+    
     for i, fila in enumerate(canal):
         for j, elemento in enumerate(fila): # Bucle por cada elemento del canal
+            
             entorno5x5 = []
+            
             for y in range(max(0, i-5), min(i+5, np.shape(canal)[1])): 
                for x in range(max(0, j-5), min(j+5, np.shape(canal)[0])): 
+                   
                     entorno5x5.append(canal[y,x]) # Cada elemento del 5x5 lo agrego a 'entorno5x5'
+                    
             matrizEntorno = np.array([[entorno5x5[0:5]], [entorno5x5[5:10]], [entorno5x5[10:15]], [entorno5x5[15:20]], [entorno5x5[20:25]]]) # Creo el ndarray con las 5 filas de 'entorno5x5'
             entornos.append(matrizEntorno)
 
@@ -42,6 +52,7 @@ def varCanal(canal : np.ndarray):
                 cuadranteB = entorno[:3, 2:6]
                 cuadranteC = entorno[2:6, :3]
                 cuadranteD = entorno[2:6, :3]
+                
                 varA = np.var(cuadranteA)
                 varB = np.var(cuadranteB)
                 varC = np.var(cuadranteC)
