@@ -5,7 +5,8 @@ from funciones import *
 def main():
     path = 'tp2-pizarro-pereyra\image.png'
     
-    a = kuwahara2(path)
+    # prueba kuwahara
+    a = kuwahara(path)
     imagen = Image.fromarray(a)
     imagen.save("imagen_kuwahara.png")
 
