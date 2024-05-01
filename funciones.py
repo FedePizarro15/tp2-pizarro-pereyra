@@ -115,11 +115,14 @@ def cypher(msg: str, image: str) -> np.ndarray:
         else:
             average = np.average([entorno[0,0,2], entorno[0,1,2], entorno[1,0,2]])
         
-        new_value = (average + l) % 256
+        new_value = 256
         
         image_k[y,x] = new_value
         
-        y += 2
+        if x >= len(image_k):
+            y += 2
+            x = 0
+            continue
         x += 2
         
     return image_k

@@ -7,7 +7,7 @@ def main(msg: str, path: str):
     # prueba kuwahara
     image_c = cypher(msg, path)
     image = Image.fromarray(image_c)
-    image.save(f"{name}_chypered.png")
+    image.save(f"{name}_test.png")
 
 if __name__ == '__main__':
     main('Hola', 'jirafa.png')
