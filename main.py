@@ -1,15 +1,14 @@
 from PIL import Image
-import numpy as np
 from funciones import *
 
-def main():
-    path = 'jirafa.png'
-    
+def main(msg: str, path: str):
+    name = path.replace('.png','')
+        
     # prueba kuwahara
-    filtro = kuwahara(path)
-    imagen = Image.fromarray(filtro)
-    imagen.save("jirafa_kuwahara.png")
+    image_c = cypher(msg, path)
+    image = Image.fromarray(image_c)
+    image.save(f"{name}_chypered.png")
 
 if __name__ == '__main__':
-    main()
+    main('Hola', 'jirafa.png')
     

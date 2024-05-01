@@ -1,11 +1,7 @@
 import numpy as np
 from PIL import Image
 
-letras = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'espacio', '.', ',', '?', '!', '¿', '¡', '(', ')', ':', ';', '-', '“', '‘', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
-
-secuencia = [(numero, letra) for numero, letra in enumerate(letras,1)]
-
-def kuwahara(path: str):
+def kuwahara(path: str) -> np.ndarray:
     '''
     Aplica el efecto "Kuwahara", un filtro de suavizado no lineal.
     Argumentos:
@@ -55,3 +51,75 @@ def kuwahara(path: str):
             imagenResultado[y,x,2] = np.average(cuadranteElegido[:,:,2])
 
     return imagenResultado[2:-2, 2:-2, :]
+
+def msg_cypher(msg: str) -> list:
+    letras = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', '.', ',', '?', '!', '¿', '¡', '(', ')', ':', ';', '-', '“', '‘', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
+
+    secuencia = [(numero, letra) for numero, letra in enumerate(letras,1)]
+
+    msg_lower = msg.lower()
+
+    msg_list = list(msg_lower)
+
+    for i in range(len(msg) - 1):
+        msg_list.insert(i * 2 + 1,-1)
+        
+    for i,l in enumerate(msg_list):
+        if l != -1:
+            for n,k in secuencia:
+                if l == k:
+                    msg_list[i] = n
+                    break
+
+    z = False
+
+    for i, l in enumerate(msg_list):
+        if z:
+            z = False
+            continue
+        
+        if l != -1:
+            if l >= 10:
+                z = True
+                msg_list.pop(i)
+                for j, k in enumerate(str(l)):
+                    msg_list.insert(i+j, int(k) + 1)
+            else:
+                msg_list[i] = msg_list[i] + 1
+
+    msg_list.append(0)
+        
+    return msg_list
+
+def cypher(msg: str, image: str) -> np.ndarray:
+    image_k = kuwahara(image)
+    msg_c = msg_cypher(msg)
+    
+    y = 1
+    x = 1
+    
+    for l in msg_c:
+    # for y in range(1, len(image_k), 2):
+    #     for x in range(1, len(image_k), 2):
+    #         l += 1
+        entorno = image_k[y-1 : y+1, x-1 : x+1, :]
+        
+        var_r = np.var([entorno[0,0,0], entorno[0,1,0], entorno[1,0,0]])
+        var_g = np.var([entorno[0,0,1], entorno[0,1,1], entorno[1,0,1]])
+        var_b = np.var([entorno[0,0,2], entorno[0,1,2], entorno[1,0,2]])
+        
+        if min(var_r, var_g, var_b) == var_r:
+            average = np.average([entorno[0,0,0], entorno[0,1,0], entorno[1,0,0]])
+        elif min(var_r, var_g, var_b) == var_g:
+            average = np.average([entorno[0,0,1], entorno[0,1,1], entorno[1,0,1]])
+        else:
+            average = np.average([entorno[0,0,2], entorno[0,1,2], entorno[1,0,2]])
+        
+        new_value = (average + l) % 256
+        
+        image_k[y,x] = new_value
+        
+        y += 2
+        x += 2
+        
+    return image_k
