@@ -3,11 +3,11 @@ import numpy as np
 from funciones import *
 
 def main():
-    path = 'tp2-pizarro-pereyra\jirafa.png'
+    path = 'jirafa.png'
     
     # prueba kuwahara
-    a = kuwahara(path)
-    imagen = Image.fromarray(a)
+    filtro = kuwahara(path)
+    imagen = Image.fromarray(filtro)
     imagen.save("jirafa_kuwahara.png")
 
 if __name__ == '__main__':

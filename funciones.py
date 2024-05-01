@@ -17,8 +17,10 @@ def kuwahara(path: str):
     # Transformo la imagen a un numpy.ndarray y le aplico un padding de 2 en la altura y en la anchura
     imagenOriginal = np.array(Image.open(path))
     imagenPad = np.pad(imagenOriginal, ((2,2), (2,2), (0,0)), 'edge') # dim --> (516,516,3)
+    
     altura, anchura, profundidad = imagenPad.shape # Tomo las dimensiones del array para poder hacer el bucle sin tomar elementos del padding
     imagenResultado = np.zeros_like(imagenPad)
+    
     for y in range(2,altura-2):
         for x in range(2,anchura-2):
             
@@ -53,4 +55,3 @@ def kuwahara(path: str):
             imagenResultado[y,x,2] = np.average(cuadranteElegido[:,:,2])
 
     return imagenResultado[2:-2, 2:-2, :]
-
