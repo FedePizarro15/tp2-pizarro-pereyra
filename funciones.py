@@ -11,51 +11,49 @@ def kuwahara(path: str) -> np.ndarray:
     '''
     
     # Transformo la imagen a un numpy.ndarray y le aplico un padding de 2 en la altura y en la anchura
-    imagenOriginal = np.array(Image.open(path))
-    imagenPad = np.pad(imagenOriginal, ((2,2), (2,2), (0,0)), 'edge') # dim --> (516,516,3)
+    original_image = np.array(Image.open(path))
+    pad_image = np.pad(original_image, ((2,2), (2,2), (0,0)), 'edge') # dim --> (516,516,3)
     
-    altura, anchura, profundidad = imagenPad.shape # Tomo las dimensiones del array para poder hacer el bucle sin tomar elementos del padding
-    imagenResultado = np.zeros_like(imagenPad)
+    heigth, width, _ = pad_image.shape # Tomo las dimensiones del array para poder hacer el bucle sin tomar elementos del padding
+    kuwahara_image = np.zeros_like(pad_image)
     
-    for y in range(2,altura-2):
-        for x in range(2,anchura-2):
+    for y in range(2,heigth-1):
+        for x in range(2,width-1):
             
             # Entorno 5x5 sin agarar el pad
-            entorno = imagenPad[y-2:y+3,x-2:x+3,:] # entorno dim --> (5,5,3) 
+            environment = pad_image[y-2:y+3,x-2:x+3,:] # entorno dim --> (5,5,3) 
 
             # Agarro caudrantes de 3x3x3
-            cuadranteA = entorno[:3, 0:3, :] 
-            cuadranteB = entorno[:3, 2:6, :]
-            cuadranteC = entorno[2:6, 0:3, :]
-            cuadranteD = entorno[2:6, 2:6, :]
+            quadrant_a = environment[:3, 0:3, :]
+            quadrant_b = environment[:3, 2:6, :]
+            quadrant_c = environment[2:6, 0:3, :]
+            quadrant_d = environment[2:6, 2:6, :]
             
             # Sumo las varianzas de cada canal
-            sumaA = sum( (np.var(cuadranteA[:,:,0]), np.var(cuadranteA[:,:,1]), np.var(cuadranteA[:,:,2])) )
-            sumaB = sum( (np.var(cuadranteB[:,:,0]), np.var(cuadranteB[:,:,1]), np.var(cuadranteB[:,:,2])) )
-            sumaC = sum( (np.var(cuadranteC[:,:,0]), np.var(cuadranteC[:,:,1]), np.var(cuadranteC[:,:,2])) )
-            sumaD = sum( (np.var(cuadranteD[:,:,0]), np.var(cuadranteD[:,:,1]), np.var(cuadranteD[:,:,2])) )
+            sum_a = sum((np.var(quadrant_a[:,:,0]), np.var(quadrant_a[:,:,1]), np.var(quadrant_a[:,:,2])))
+            sum_b = sum((np.var(quadrant_b[:,:,0]), np.var(quadrant_b[:,:,1]), np.var(quadrant_b[:,:,2])))
+            sum_c = sum((np.var(quadrant_c[:,:,0]), np.var(quadrant_c[:,:,1]), np.var(quadrant_c[:,:,2])))
+            sum_d = sum((np.var(quadrant_d[:,:,0]), np.var(quadrant_d[:,:,1]), np.var(quadrant_d[:,:,2])))
 
             # Me quedo con el cuadrante cuya varianza sea menor
-            if min(sumaA, sumaB, sumaC, sumaD) == sumaA:
-                cuadranteElegido = cuadranteA
-            elif min(sumaA, sumaB, sumaC, sumaD) == sumaB:
-                cuadranteElegido = cuadranteB
-            elif min(sumaA, sumaB, sumaC, sumaD) == sumaC:
-                cuadranteElegido = cuadranteC
+            if min(sum_a, sum_b, sum_c, sum_d) == sum_a:
+                selected_q = quadrant_a
+            elif min(sum_a, sum_b, sum_c, sum_d) == sum_b:
+                selected_q = quadrant_b
+            elif min(sum_a, sum_b, sum_c, sum_d) == sum_c:
+                selected_q = quadrant_c
             else:
-                cuadranteElegido = cuadranteD
+                selected_q = quadrant_d
             
             # El pixel en el que estoy se convierte en el promedio del cuadrante elegido (por canal)
-            imagenResultado[y,x,0] = np.average(cuadranteElegido[:,:,0])
-            imagenResultado[y,x,1] = np.average(cuadranteElegido[:,:,1])
-            imagenResultado[y,x,2] = np.average(cuadranteElegido[:,:,2])
+            kuwahara_image[y,x,0] = np.average(selected_q[:,:,0])
+            kuwahara_image[y,x,1] = np.average(selected_q[:,:,1])
+            kuwahara_image[y,x,2] = np.average(selected_q[:,:,2])
 
-    return imagenResultado[2:-2, 2:-2, :]
+    return kuwahara_image[2:-2, 2:-2, :]
 
 def msg_cypher(msg: str) -> list:
-    letras = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', '.', ',', '?', '!', '¿', '¡', '(', ')', ':', ';', '-', '“', '‘', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
-
-    secuencia = [(numero, letra) for numero, letra in enumerate(letras,1)]
+    words = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', '.', ',', '?', '!', '¿', '¡', '(', ')', ':', ';', '-', '“', '‘', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
 
     msg_lower = msg.lower()
 
@@ -64,28 +62,22 @@ def msg_cypher(msg: str) -> list:
     for i in range(len(msg) - 1):
         msg_list.insert(i * 2 + 1,-1)
         
-    for i,l in enumerate(msg_list):
+    for i, l in enumerate(msg_list):
         if l != -1:
-            for n,k in secuencia:
-                if l == k:
-                    msg_list[i] = n
-                    break
+            msg_list[i] = words.index(l) + 1
 
-    z = False
+    flag = False
 
     for i, l in enumerate(msg_list):
-        if z:
-            z = False
+        if flag:
+            flag = False
             continue
         
         if l != -1:
-            if l >= 10:
-                z = True
-                msg_list.pop(i)
-                for j, k in enumerate(str(l)):
-                    msg_list.insert(i+j, int(k) + 1)
-            else:
-                msg_list[i] = msg_list[i] + 1
+            flag = True
+            msg_list.pop(i)
+            for j, k in enumerate(str(l)):
+                msg_list.insert(i+j, int(k) + 1)
 
     msg_list.append(0)
         
@@ -99,21 +91,18 @@ def cypher(msg: str, image: str) -> np.ndarray:
     x = 1
     
     for l in msg_c:
-    # for y in range(1, len(image_k), 2):
-    #     for x in range(1, len(image_k), 2):
-    #         l += 1
-        entorno = image_k[y-1 : y+1, x-1 : x+1, :]
+        environment = image_k[y-1 : y+1, x-1 : x+1, :]
         
-        var_r = np.var([entorno[0,0,0], entorno[0,1,0], entorno[1,0,0]])
-        var_g = np.var([entorno[0,0,1], entorno[0,1,1], entorno[1,0,1]])
-        var_b = np.var([entorno[0,0,2], entorno[0,1,2], entorno[1,0,2]])
+        var_r = np.var([environment[0,0,0], environment[0,1,0], environment[1,0,0]])
+        var_g = np.var([environment[0,0,1], environment[0,1,1], environment[1,0,1]])
+        var_b = np.var([environment[0,0,2], environment[0,1,2], environment[1,0,2]])
         
         if min(var_r, var_g, var_b) == var_r:
-            average = np.average([entorno[0,0,0], entorno[0,1,0], entorno[1,0,0]])
+            average = np.average([environment[0,0,0], environment[0,1,0], environment[1,0,0]])
         elif min(var_r, var_g, var_b) == var_g:
-            average = np.average([entorno[0,0,1], entorno[0,1,1], entorno[1,0,1]])
+            average = np.average([environment[0,0,1], environment[0,1,1], environment[1,0,1]])
         else:
-            average = np.average([entorno[0,0,2], entorno[0,1,2], entorno[1,0,2]])
+            average = np.average([environment[0,0,2], environment[0,1,2], environment[1,0,2]])
         
         new_value = (average + l) % 256
         
@@ -126,3 +115,78 @@ def cypher(msg: str, image: str) -> np.ndarray:
         x += 2
         
     return image_k
+
+def decypher(path: str) -> str:
+    
+    msg_list = []
+    
+    image = np.array(Image.open(path))
+    
+    for y in range(1, int(len(image) / 2), 2):
+        for x in range(1, int(len(image) / 2), 2):
+            environment = image[y-1 : y+1, x-1 : x+1, :]
+        
+            var_r = np.var([environment[0,0,0], environment[0,1,0], environment[1,0,0]])
+            var_g = np.var([environment[0,0,1], environment[0,1,1], environment[1,0,1]])
+            var_b = np.var([environment[0,0,2], environment[0,1,2], environment[1,0,2]])
+            
+            if min(var_r, var_g, var_b) == var_r:
+                average = np.average([environment[0,0,0], environment[0,1,0], environment[1,0,0]])
+                value = environment[1,1,0] - average
+            elif min(var_r, var_g, var_b) == var_g:
+                average = np.average([environment[0,0,1], environment[0,1,1], environment[1,0,1]])
+                value = environment[1,1,1] - average
+            else:
+                average = np.average([environment[0,0,2], environment[0,1,2], environment[1,0,2]])
+                value = environment[1,1,2] - average
+                
+            if value == 0:
+                msg_list += [value]
+                return msg_list
+            elif value < -1:
+                msg_list += [value + 256]
+            else:
+                msg_list += [value]
+                
+    msg = msg_decypher(msg_list)
+    
+    return msg
+                
+def msg_decypher(msg_list: list) -> str:
+    words = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', '.', ',', '?', '!', '¿', '¡', '(', ')', ':', ';', '-', '“', '‘', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
+
+    for i, n in enumerate(msg_list):
+        msg_list[i] -= 1
+
+    i = 0
+    j = 0
+    final_msg = [[]]
+    
+    while True:
+        n = msg_list[i]
+        
+        if n == -1:
+            final_msg.remove([])
+            break
+        elif n == -2:
+            i += 1
+            j += 1
+            final_msg += [[]]
+        else:
+            final_msg[j] += [n]
+            i += 1
+    
+    for i, l in enumerate(final_msg):
+        sum = 0
+        for j, n in enumerate(l):
+            sum += n * (10 ** ((len(l) - 1) - j))
+        final_msg[i] = sum
+    
+    msg = []
+    
+    for i in final_msg:
+        msg.append(words[i - 1])
+    
+    msg = ''.join(msg)
+    
+    return msg
