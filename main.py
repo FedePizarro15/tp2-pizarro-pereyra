@@ -1,5 +1,5 @@
 from PIL import Image
-from funciones import *
+from funciones import cypher
 
 def main(msg: str, path: str):
     name = path.replace('.png','')
