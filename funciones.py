@@ -1,5 +1,6 @@
 import numpy as np
 from PIL import Image
+import math
 
 def kuwahara(path: str) -> np.ndarray:
     '''
@@ -9,14 +10,14 @@ def kuwahara(path: str) -> np.ndarray:
     Returns:
     - numpy.ndarray de la imagen con el filtro aplicado
     '''
-    
+
     # Transformo la imagen a un numpy.ndarray y le aplico un padding de 2 en la altura y en la anchura
     original_image = np.array(Image.open(path))
     pad_image = np.pad(original_image, ((2,2), (2,2), (0,0)), 'edge') # dim --> (516,516,3)
-    
+
     heigth, width, _ = pad_image.shape # Tomo las dimensiones del array para poder hacer el bucle sin tomar elementos del padding
     kuwahara_image = np.zeros_like(pad_image)
-    
+
     for y in range(2,heigth-1):
         for x in range(2,width-1):
             
@@ -86,10 +87,10 @@ def msg_cypher(msg: str) -> list:
 def cypher(msg: str, image: str) -> np.ndarray:
     image_k = kuwahara(image)
     msg_c = msg_cypher(msg)
-    
+
     y = 1
     x = 1
-    
+
     for l in msg_c:
         environment = image_k[y-1 : y+1, x-1 : x+1, :]
         
@@ -98,32 +99,34 @@ def cypher(msg: str, image: str) -> np.ndarray:
         var_b = np.var([environment[0,0,2], environment[0,1,2], environment[1,0,2]])
         
         if min(var_r, var_g, var_b) == var_r:
-            average = np.average([environment[0,0,0], environment[0,1,0], environment[1,0,0]])
+            average = math.floor(np.average([environment[0,0,0], environment[0,1,0], environment[1,0,0]]))
+            new_value = (average + l) % 256
+            image_k[y,x,0] = new_value
         elif min(var_r, var_g, var_b) == var_g:
-            average = np.average([environment[0,0,1], environment[0,1,1], environment[1,0,1]])
+            average = math.floor(np.average([environment[0,0,1], environment[0,1,1], environment[1,0,1]]))
+            new_value = (average + l) % 256
+            image_k[y,x,1] = new_value
         else:
-            average = np.average([environment[0,0,2], environment[0,1,2], environment[1,0,2]])
+            average = math.floor(np.average([environment[0,0,2], environment[0,1,2], environment[1,0,2]]))
+            new_value = (average + l) % 256
+            image_k[y,x,2] = new_value
         
-        new_value = (average + l) % 256
-        
-        image_k[y,x] = new_value
-        
-        if x >= len(image_k):
+        if x >= len(image_k) - 2:
             y += 2
-            x = 0
+            x = 1
             continue
         x += 2
         
     return image_k
 
 def decypher(path: str) -> str:
-    
+
     msg_list = []
-    
+
     image = np.array(Image.open(path))
-    
-    for y in range(1, int(len(image) / 2), 2):
-        for x in range(1, int(len(image) / 2), 2):
+
+    for y in range(1, len(image), 2):
+        for x in range(1, len(image), 2):
             environment = image[y-1 : y+1, x-1 : x+1, :]
         
             var_r = np.var([environment[0,0,0], environment[0,1,0], environment[1,0,0]])
@@ -132,26 +135,27 @@ def decypher(path: str) -> str:
             
             if min(var_r, var_g, var_b) == var_r:
                 average = np.average([environment[0,0,0], environment[0,1,0], environment[1,0,0]])
-                value = environment[1,1,0] - average
+                value = environment[1,1,0] - math.floor(average)
             elif min(var_r, var_g, var_b) == var_g:
                 average = np.average([environment[0,0,1], environment[0,1,1], environment[1,0,1]])
-                value = environment[1,1,1] - average
+                value = environment[1,1,1] - math.floor(average)
             else:
                 average = np.average([environment[0,0,2], environment[0,1,2], environment[1,0,2]])
-                value = environment[1,1,2] - average
+                value = environment[1,1,2] - math.floor(average)
                 
             if value == 0:
                 msg_list += [value]
-                return msg_list
+                msg = msg_decypher(msg_list)
+                return msg
             elif value < -1:
                 msg_list += [value + 256]
             else:
                 msg_list += [value]
                 
     msg = msg_decypher(msg_list)
-    
+
     return msg
-                
+
 def msg_decypher(msg_list: list) -> str:
     words = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', '.', ',', '?', '!', '¿', '¡', '(', ')', ':', ';', '-', '“', '‘', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
 
@@ -161,7 +165,7 @@ def msg_decypher(msg_list: list) -> str:
     i = 0
     j = 0
     final_msg = [[]]
-    
+
     while True:
         n = msg_list[i]
         
@@ -175,18 +179,18 @@ def msg_decypher(msg_list: list) -> str:
         else:
             final_msg[j] += [n]
             i += 1
-    
+
     for i, l in enumerate(final_msg):
         sum = 0
         for j, n in enumerate(l):
             sum += n * (10 ** ((len(l) - 1) - j))
         final_msg[i] = sum
-    
+
     msg = []
-    
+
     for i in final_msg:
         msg.append(words[i - 1])
-    
+
     msg = ''.join(msg)
-    
+
     return msg
