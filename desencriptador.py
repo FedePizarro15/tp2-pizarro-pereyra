@@ -3,7 +3,8 @@ from funciones import decypher
 
 def main():
     print('== Desencriptador ==')
-    path = input("Ingrese el nombre del archivo encriptado:\n> ")
+    path_input = input("Ingrese el nombre del archivo encriptado:\n> ")
+    path = f'{path_input}.png'
     msg = decypher(path)
     print(f'El mensaje oculto es:\n{msg}')
 
