@@ -170,7 +170,8 @@ def msg_decypher(msg_list: list) -> str:
         n = msg_list[i]
         
         if n == -1:
-            final_msg.remove([])
+            if final_msg[-1] == []:
+                final_msg.remove([])
             break
         elif n == -2:
             i += 1
