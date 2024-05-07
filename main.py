@@ -11,4 +11,3 @@ def main(msg: str, path: str):
 
 if __name__ == '__main__':
     main('Hola', 'jirafa.png')
-    

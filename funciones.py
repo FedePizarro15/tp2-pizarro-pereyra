@@ -2,41 +2,47 @@ import numpy as np
 from PIL import Image
 import math
 
+'''
+¿Se puede usar "math"?
+¿Se puede usar min(), max()?
+'''
+
 def kuwahara(path: str) -> np.ndarray:
     '''
     Aplica el efecto "Kuwahara", un filtro de suavizado no lineal.
-    Argumentos:
-    - path --> ubicación de la imagen a la cuál se le aplicará el filtro
-    Returns:
-    - numpy.ndarray de la imagen con el filtro aplicado
+    - Argumentos:
+    path --> Ubicación de la imagen a la cuál se le aplicará el filtro.
+    - Retorna:
+    Matriz de la imagen con el filtro aplicado.
     '''
 
-    # Transformo la imagen a un numpy.ndarray y le aplico un padding de 2 en la altura y en la anchura
+    # Transformación de la imagen a numpy.ndarray y aplicación un padding de 2 de alto y ancho
     original_image = np.array(Image.open(path))
     pad_image = np.pad(original_image, ((2,2), (2,2), (0,0)), 'edge') # dim --> (516,516,3)
 
-    heigth, width, _ = pad_image.shape # Tomo las dimensiones del array para poder hacer el bucle sin tomar elementos del padding
+    # Dimensiones del array para hacer el bucle sin elementos del padding
+    heigth, width, _ = pad_image.shape
     kuwahara_image = np.zeros_like(pad_image)
 
     for y in range(2,heigth-1):
         for x in range(2,width-1):
             
-            # Entorno 5x5 sin agarar el pad
+            # Entorno 5x5 sin el padding
             environment = pad_image[y-2:y+3,x-2:x+3,:] # entorno dim --> (5,5,3) 
 
-            # Agarro caudrantes de 3x3x3
+            # Cuadrantes 3x3x3
             quadrant_a = environment[:3, 0:3, :]
             quadrant_b = environment[:3, 2:6, :]
             quadrant_c = environment[2:6, 0:3, :]
             quadrant_d = environment[2:6, 2:6, :]
             
-            # Sumo las varianzas de cada canal
+            # Suma de las varianzas de cada canal
             sum_a = sum((np.var(quadrant_a[:,:,0]), np.var(quadrant_a[:,:,1]), np.var(quadrant_a[:,:,2])))
             sum_b = sum((np.var(quadrant_b[:,:,0]), np.var(quadrant_b[:,:,1]), np.var(quadrant_b[:,:,2])))
             sum_c = sum((np.var(quadrant_c[:,:,0]), np.var(quadrant_c[:,:,1]), np.var(quadrant_c[:,:,2])))
             sum_d = sum((np.var(quadrant_d[:,:,0]), np.var(quadrant_d[:,:,1]), np.var(quadrant_d[:,:,2])))
 
-            # Me quedo con el cuadrante cuya varianza sea menor
+            # Selección del cuadrante con menor varianza
             if min(sum_a, sum_b, sum_c, sum_d) == sum_a:
                 selected_q = quadrant_a
             elif min(sum_a, sum_b, sum_c, sum_d) == sum_b:
@@ -46,7 +52,7 @@ def kuwahara(path: str) -> np.ndarray:
             else:
                 selected_q = quadrant_d
             
-            # El pixel en el que estoy se convierte en el promedio del cuadrante elegido (por canal)
+            # Promedio del cuadrante elegido es el nuevo valor del pixel
             kuwahara_image[y,x,0] = np.average(selected_q[:,:,0])
             kuwahara_image[y,x,1] = np.average(selected_q[:,:,1])
             kuwahara_image[y,x,2] = np.average(selected_q[:,:,2])
@@ -54,6 +60,13 @@ def kuwahara(path: str) -> np.ndarray:
     return kuwahara_image[2:-2, 2:-2, :]
 
 def msg_cypher(msg: str) -> list:
+    '''
+    Cifra el mensaje según una lista de caracteres y sus números correspondintes.
+    - Argumentos:
+    msg --> Mensaje que se quiere encifrar.
+    - Retorna:
+    Lista con el mensaje cifrado, cada caracter está dado por su correspondiente número, separado por "-1" y un "0" que marca el final del mensaje.
+    '''
     words = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', '.', ',', '?', '!', '¿', '¡', '(', ')', ':', ';', '-', '“', '‘', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
 
     msg_lower = msg.lower()
@@ -84,8 +97,16 @@ def msg_cypher(msg: str) -> list:
         
     return msg_list
 
-def cypher(msg: str, image: str) -> np.ndarray:
-    image_k = kuwahara(image)
+def cypher(msg: str, path: str) -> Image.Image:
+    '''
+    Encripta un mensaje cifrado en una imagen a la que se le aplica el filtro "kuwahara".
+    - Argumentos:
+    msg --> Mensaje que se debe cifrar y encriptar en la imagen.
+    path --> Ubicación de la imagen a la que se le encriptará el mensaje.
+    - Retorna:
+    Imagen que contiene el mensaje cifrado.
+    '''
+    image_k = kuwahara(path)
     msg_c = msg_cypher(msg)
 
     y = 1
@@ -116,11 +137,19 @@ def cypher(msg: str, image: str) -> np.ndarray:
             x = 1
             continue
         x += 2
-        
-    return image_k
+    
+    image = Image.fromarray(image_k)
+    
+    return image
 
 def decypher(path: str) -> str:
-
+    '''
+    Desencripta un mensaje cifrado en una imagen.
+    - Argumentos:
+    path --> Ubicación de la imagen de la que se quiere descifrar un mensaje.
+    - Retorna:
+    Mensaje descifrado.
+    '''
     msg_list = []
 
     image = np.array(Image.open(path))
@@ -157,6 +186,13 @@ def decypher(path: str) -> str:
     return msg
 
 def msg_decypher(msg_list: list) -> str:
+    '''
+    Descifra un mensaje dado por números en una lista.
+    - Argumentos:
+    msg_list --> Lista con enteros que representan un caracter, ("-1" significa el cambio de caracter, "0" es el final del mensaje).
+    - Retorna:
+    Mensaje descifrado.
+    '''
     words = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', '.', ',', '?', '!', '¿', '¡', '(', ')', ':', ';', '-', '“', '‘', 'á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ']
 
     for i, n in enumerate(msg_list):
