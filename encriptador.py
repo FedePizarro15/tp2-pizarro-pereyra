@@ -1,5 +1,4 @@
-from PIL import Image
-from funciones import cypher
+from funciones import encryptor
 
 def main():
     print('== Encriptador ==')
@@ -7,7 +6,7 @@ def main():
     path = f'{path_input}.png'
     msg = input("Ingrese el mensaje a esconder:\n> ")
     final_name = input("Ingrese nombre del archivo de salida:\n> ")
-    image = cypher(msg, path)
+    image = encryptor(msg, path)
     image.save(f"{final_name}.png")
 
 if __name__ == '__main__':
