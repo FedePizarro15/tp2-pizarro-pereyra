@@ -8,5 +8,5 @@ def main():
     print(f'El mensaje oculto es:\n{msg}')
 
 if __name__ == '__main__':
-    main()  
+    main() 
     print()
